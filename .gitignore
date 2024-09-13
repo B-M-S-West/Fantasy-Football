@@ -1,6 +1,7 @@
 #My files
 csv/
 excel/
+fantasyfootball-draft.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

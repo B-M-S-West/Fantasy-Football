@@ -7,6 +7,7 @@ ENTRY_PICKS_URL = 'https://draft.premierleague.com/api/entry/{}/event/{}'
 ELEMENT_STATS_URL = 'https://draft.premierleague.com/api/event/{}/live'
 TRANSFERS_URL = 'https://draft.premierleague.com/api/draft/league/{}/transactions'
 DRAFTS_URL = 'https://draft.premierleague.com/api/draft/{}/choices'
+MANAGER_HISTORY_URL = 'https://draft.premierleague.com/api/entry/{}/history'
 
 def get_game_status():
     response = requests.get(GAME_STATUS_URL)
@@ -40,3 +41,8 @@ def get_drafts(league_id):
     url = DRAFTS_URL.format(league_id)
     response = requests.get(url)
     return response.json()['choices']
+
+def get_manager_history(entry_id):
+    url = MANAGER_HISTORY_URL.format(entry_id)
+    response = requests.get(url)
+    return response.json()["history"]

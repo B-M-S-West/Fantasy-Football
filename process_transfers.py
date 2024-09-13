@@ -1,6 +1,7 @@
 import client
 import write_csv
 import write_excel
+import write_google
 
 def run(league_id):
     league_data = client.get_league_data(league_id)
@@ -45,7 +46,10 @@ def run(league_id):
 
     write_csv.most_transfers_by_manager(most_transfers_by_manager)
     write_excel.most_transfers_by_manager(most_transfers_by_manager)
+    write_google.most_transfers_by_manager(most_transfers_by_manager)
+
     write_csv.most_transferred_players(most_uniquely_transferred_players)
     write_excel.most_transferred_players(most_uniquely_transferred_players)
+    write_google.most_transferred_players(most_uniquely_transferred_players)
 
     print("CSVs generated for process_transfers.")

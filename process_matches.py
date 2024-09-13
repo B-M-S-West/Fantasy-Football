@@ -1,6 +1,7 @@
 import client
 import write_csv
 import write_excel
+import write_google
 
 def run(league_id):
     game_status = client.get_game_status()
@@ -8,36 +9,45 @@ def run(league_id):
 
     league_data = client.get_league_data(league_id)
     league_entries = league_data['league_entries']
-    standings = league_data['standings']
 
     # Create mapping from league_entry to entry_id
-    league_entry_to_entry_id = {entry['id']: entry['entry_id'] for entry in league_entries}
     entry_id_to_name_map = {entry['entry_id']: entry['player_first_name'] for entry in league_entries}
 
-    gameweek_ranks = {entry['entry_id']: [] for entry in league_entries}
+    gameweek_scores = {entry['entry_id']: [] for entry in league_entries}
     total_scores = {entry['entry_id']: [] for entry in league_entries}
 
-    # Process standings data
-    for gameweek in range(1, current_gameweek + 1):
-        gameweek_standings = sorted(standings, key=lambda x: x['total'], reverse=True)
-        for rank, entry in enumerate(gameweek_standings, 1):
-            league_entry = entry['league_entry']
-            entry_id = league_entry_to_entry_id[league_entry]
-            gameweek_ranks[entry_id].append(rank)
-            total_scores[entry_id].append(entry['total'])
+    # Process each entry ID
+    for entry_id in gameweek_scores.keys():
+        history = client.get_manager_history(entry_id)
+        
+        if history:
+            # Sort the history by event number
+            sorted_history = sorted(history, key=lambda x: x['event'])
+            
+            # Initialize event counter
+            current_event = 1
+            
+            for event in sorted_history:
+                # Fill in any missing events with None
+                while current_event < event['event']:
+                    gameweek_scores[entry_id].append(None)
+                    total_scores[entry_id].append(None)
+                    current_event += 1
+                
+                # Append the actual points and total_points
+                gameweek_scores[entry_id].append(event['points'])
+                total_scores[entry_id].append(event['total_points'])
+                current_event += 1
 
-    # Calculate total score average difference
-    total_score_avg_diff = {entry['entry_id']: [] for entry in league_entries}
-    for gw in range(current_gameweek):
-        average = sum(scores[gw] for scores in total_scores.values()) / len(league_entries)
-        for entry_id in total_scores:
-            total_score_avg_diff[entry_id].append(total_scores[entry_id][gw] - average)
 
-    write_csv.league_standing_progression(entry_id_to_name_map, current_gameweek, gameweek_ranks)  
-    write_excel.league_standing_progression(entry_id_to_name_map, current_gameweek, gameweek_ranks)
+    write_csv.weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores) 
+    write_google.weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores) 
+    write_excel.weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores)
+
     write_csv.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
+    write_google.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
     write_excel.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
-    write_csv.total_score_avg_diff_progression(entry_id_to_name_map, current_gameweek, total_score_avg_diff)
-    write_excel.total_score_avg_diff_progression(entry_id_to_name_map, current_gameweek, total_score_avg_diff)
+
 
     print("CSVs generated for process_matches.")
+    

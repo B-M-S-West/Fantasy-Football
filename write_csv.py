@@ -13,20 +13,15 @@ def write_csv(filename, headers, data):
         writer.writerow(headers)
         writer.writerows(data)
 
-def league_standing_progression(entry_id_to_name_map, current_gameweek, gameweek_ranks):
+def weekly_score(entry_id_to_name_map, current_gameweek, gameweek_ranks):
     headers = ['Manager'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
     data = [[entry_id_to_name_map[entry]] + ranks for entry, ranks in gameweek_ranks.items()]
-    write_csv('leagueStandingProgression.csv', headers, data)
+    write_csv('weekly_score.csv', headers, data)
 
 def total_score_progression(entry_id_to_name_map, current_gameweek, total_scores):
     headers = ['Manager'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
     data = [[entry_id_to_name_map[entry]] + scores for entry, scores in total_scores.items()]
     write_csv('totalScoreProgression.csv', headers, data)
-
-def total_score_avg_diff_progression(entry_id_to_name_map, current_gameweek, total_score_avg_diff):
-    headers = ['Manager'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
-    data = [[entry_id_to_name_map[entry]] + diffs for entry, diffs in total_score_avg_diff.items()]
-    write_csv('totalScoreAvgDiffProgression.csv', headers, data)
 
 def best_players_per_manager(best_players_per_manager):
     headers = ['Rank'] + list(best_players_per_manager.keys())

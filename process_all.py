@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import write_csv
 import write_excel
+import write_google
 import process_matches
 import process_transfers
 import process_point_breakdowns
@@ -17,6 +18,7 @@ def main():
     
     write_csv.directory_reset()
     write_excel.directory_reset()
+    write_google.get_google_sheets_service()
     
     print("Processing matches...")
     process_matches.run(LEAGUE_ID)

@@ -1,6 +1,7 @@
 import client
 import write_csv
 import write_excel
+import write_google
 
 def run(league_id):
     game_status = client.get_game_status()
@@ -165,13 +166,22 @@ def run(league_id):
 
     write_csv.best_players_per_manager(best_players_per_manager)
     write_excel.best_players_per_manager(best_players_per_manager)
+    write_google.best_players_per_manager(best_players_per_manager)
+
     write_csv.best_clubs_per_manager(best_clubs_per_manager)
     write_excel.best_clubs_per_manager(best_clubs_per_manager)
+    write_google.best_clubs_per_manager(best_clubs_per_manager)
+
     write_csv.best_players_overall(best_players_overall)
     write_excel.best_players_overall(best_players_overall)
+    write_google.best_players_overall(best_players_overall)
+
     write_csv.best_managers_by_position(league_entries, best_managers_by_position)
     write_excel.best_managers_by_position(league_entries, best_managers_by_position)
+    write_google.best_managers_by_position(league_entries, best_managers_by_position)
+    
     write_csv.best_managers_by_action(league_entries, best_managers_by_action)
     write_excel.best_managers_by_action(league_entries, best_managers_by_action)
+    write_google.best_managers_by_action(league_entries, best_managers_by_action)
 
     print("CSVs generated for process_point_breakdowns.")
