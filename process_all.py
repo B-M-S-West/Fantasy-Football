@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import write_csv
+import write_excel
 import process_matches
 import process_transfers
 import process_point_breakdowns
@@ -15,6 +16,7 @@ def main():
     print(f"Starting analysis for league ID: {LEAGUE_ID}")
     
     write_csv.directory_reset()
+    write_excel.directory_reset()
     
     print("Processing matches...")
     process_matches.run(LEAGUE_ID)

@@ -1,5 +1,6 @@
 import client
 import write_csv
+import write_excel
 
 def run(league_id):
     game_status = client.get_game_status()
@@ -32,8 +33,11 @@ def run(league_id):
         for entry_id in total_scores:
             total_score_avg_diff[entry_id].append(total_scores[entry_id][gw] - average)
 
-    write_csv.league_standing_progression(entry_id_to_name_map, current_gameweek, gameweek_ranks)
+    write_csv.league_standing_progression(entry_id_to_name_map, current_gameweek, gameweek_ranks)  
+    write_excel.league_standing_progression(entry_id_to_name_map, current_gameweek, gameweek_ranks)
     write_csv.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
+    write_excel.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
     write_csv.total_score_avg_diff_progression(entry_id_to_name_map, current_gameweek, total_score_avg_diff)
+    write_excel.total_score_avg_diff_progression(entry_id_to_name_map, current_gameweek, total_score_avg_diff)
 
     print("CSVs generated for process_matches.")
