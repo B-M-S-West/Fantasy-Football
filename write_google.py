@@ -53,14 +53,14 @@ def write_to_sheet(service, sheet_name, headers, data):
 
   print(f'{result.get("updatedCells")} cells updated in {sheet_name}.')
 
-def weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores):
-  headers = ['Manager'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
-  data = [[entry_id_to_name_map[entry]] + ranks for entry, ranks in gameweek_scores.items()]
+def weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores):
+  headers = ['Manager', 'Team'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
+  data = [[manager, team] + scores for entry_id, (manager, team) in entry_id_to_name_to_team_map.items() if entry_id in gameweek_scores for scores in [gameweek_scores[entry_id]]]
   write_to_sheet(get_google_sheets_service(), 'Weekly Score', headers, data)
 
-def total_score_progression(entry_id_to_name_map, current_gameweek, total_scores):
-  headers = ['Manager'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
-  data = [[entry_id_to_name_map[entry]] + scores for entry, scores in total_scores.items()]
+def total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores):
+  headers = ['Manager', 'Team'] + [f'GW{i}' for i in range(1, current_gameweek + 1)]
+  data = [[manager, team] + scores for entry_id, (manager, team) in entry_id_to_name_to_team_map.items() if entry_id in total_scores for scores in [total_scores[entry_id]]]
   write_to_sheet(get_google_sheets_service(), 'Total Score Progression', headers, data)
 
 def best_players_per_manager(best_players_per_manager):

@@ -11,7 +11,7 @@ def run(league_id):
     league_entries = league_data['league_entries']
 
     # Create mapping from league_entry to entry_id
-    entry_id_to_name_map = {entry['entry_id']: entry['player_first_name'] for entry in league_entries}
+    entry_id_to_name_to_team_map = {entry['entry_id']: (entry['player_first_name'], entry['entry_name']) for entry in league_entries}
 
     gameweek_scores = {entry['entry_id']: [] for entry in league_entries}
     total_scores = {entry['entry_id']: [] for entry in league_entries}
@@ -40,13 +40,13 @@ def run(league_id):
                 current_event += 1
 
 
-    write_csv.weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores) 
-    write_google.weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores) 
-    write_excel.weekly_score(entry_id_to_name_map, current_gameweek, gameweek_scores)
+    write_csv.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores) 
+    write_google.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores) 
+    write_excel.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores)
 
-    write_csv.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
-    write_google.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
-    write_excel.total_score_progression(entry_id_to_name_map, current_gameweek, total_scores)
+    write_csv.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
+    write_google.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
+    write_excel.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
 
 
     print("CSVs generated for process_matches.")
