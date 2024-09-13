@@ -11,7 +11,7 @@ def run(league_id):
     league_entries = league_data['league_entries']
 
     # Create mapping from league_entry to entry_id
-    entry_id_to_name_to_team_map = {entry['entry_id']: (entry['player_first_name'], entry['entry_name']) for entry in league_entries}
+    entry_id_to_name_to_team_map = {entry['entry_id']: (entry['player_first_name']+ ' ' + entry['player_last_name'][0], entry['entry_name']) for entry in league_entries}
 
     gameweek_scores = {entry['entry_id']: [] for entry in league_entries}
     total_scores = {entry['entry_id']: [] for entry in league_entries}
