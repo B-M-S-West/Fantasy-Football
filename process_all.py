@@ -1,10 +1,15 @@
+import os
+from dotenv import load_dotenv
 import write_csv
 import process_matches
 import process_transfers
 import process_point_breakdowns
 
-# Set your league ID here
-LEAGUE_ID = 70382
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the LEAGUE_ID from environment variables
+LEAGUE_ID = int(os.getenv('LEAGUE_ID'))
 
 def main():
     print(f"Starting analysis for league ID: {LEAGUE_ID}")
