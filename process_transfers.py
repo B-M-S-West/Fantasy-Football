@@ -1,7 +1,5 @@
 import client
-import write_csv
-import write_excel
-import write_google
+import write_file
 
 def run(league_id):
     league_data = client.get_league_data(league_id)
@@ -44,12 +42,7 @@ def run(league_id):
     most_transfers_by_manager = sorted(transfers_by_manager.values(), key=lambda x: x['total_transfers'], reverse=True)
     most_uniquely_transferred_players = sorted(most_transferred_elements.values(), key=lambda x: (x['unique_transfers'], x['successful_transfers']), reverse=True)
 
-    write_csv.most_transfers_by_manager(most_transfers_by_manager)
-    write_excel.most_transfers_by_manager(most_transfers_by_manager)
-    write_google.most_transfers_by_manager(most_transfers_by_manager)
+    write_file.most_transfers_by_manager(most_transfers_by_manager)
+    write_file.most_transferred_players(most_uniquely_transferred_players)
 
-    write_csv.most_transferred_players(most_uniquely_transferred_players)
-    write_excel.most_transferred_players(most_uniquely_transferred_players)
-    write_google.most_transferred_players(most_uniquely_transferred_players)
-
-    print("CSVs generated for process_transfers.")
+    print("Files generated for process_transfers.")

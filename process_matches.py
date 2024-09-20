@@ -1,7 +1,5 @@
 import client
-import write_csv
-import write_excel
-import write_google
+import write_file
 
 def run(league_id):
     game_status = client.get_game_status()
@@ -39,15 +37,7 @@ def run(league_id):
                 total_scores[entry_id].append(event['total_points'])
                 current_event += 1
 
-
-    write_csv.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores) 
-    write_google.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores) 
-    write_excel.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores)
-
-    write_csv.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
-    write_google.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
-    write_excel.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
-
-
-    print("CSVs generated for process_matches.")
+    write_file.weekly_score(entry_id_to_name_to_team_map, current_gameweek, gameweek_scores) 
+    write_file.total_score_progression(entry_id_to_name_to_team_map, current_gameweek, total_scores)
+    print("Files generated for process_matches.")
     

@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-import write_csv
-import write_excel
-import write_google
+
+import write_file
 import process_matches
 import process_transfers
 import process_point_breakdowns
@@ -16,9 +15,8 @@ LEAGUE_ID = int(os.getenv('LEAGUE_ID'))
 def main():
     print(f"Starting analysis for league ID: {LEAGUE_ID}")
     
-    write_csv.directory_reset()
-    write_excel.directory_reset()
-    write_google.get_google_sheets_service()
+    write_file.directory_reset()
+    write_file.get_google_sheets_service()
     
     print("Processing matches...")
     process_matches.run(LEAGUE_ID)
