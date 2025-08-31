@@ -2,6 +2,8 @@
 csv/
 excel/
 fantasyfootball-draft.json
+.vscode
+__marimo__/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
