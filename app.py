@@ -10,7 +10,11 @@ def _():
     import httpx
     import os
     from dotenv import load_dotenv
-    return load_dotenv, mo, os
+    import polars as pl
+    import duckdb
+    import plotly.express as px
+    from typing import Dict, List
+    return Dict, List, duckdb, httpx, load_dotenv, mo, os, pl
 
 
 @app.cell
@@ -34,7 +38,7 @@ def _():
     TRANSFERS_URL = 'https://draft.premierleague.com/api/draft/league/{}/transactions'
     DRAFTS_URL = 'https://draft.premierleague.com/api/draft/{}/choices'
     MANAGER_HISTORY_URL = 'https://draft.premierleague.com/api/entry/{}/history'
-    return
+    return LEAGUE_DATA_URL, MANAGER_HISTORY_URL
 
 
 @app.cell
@@ -46,7 +50,34 @@ def _(load_dotenv, os):
 
 
 @app.cell
-def _():
+def _(Dict, LEAGUE_DATA_URL, List, MANAGER_HISTORY_URL, httpx):
+    def fetch_data(url: str) -> Dict:
+        response = httpx.get(url)
+        return response.json()
+
+    def get_league_data(league_id: str) -> Dict:
+        url = (LEAGUE_DATA_URL).format(league_id)
+        return fetch_data(url)
+
+    def get_manager_history(entry_id: int) -> List:
+        url = (MANAGER_HISTORY_URL).format(entry_id)
+        return fetch_data(url)["history"]
+    return (get_league_data,)
+
+
+@app.cell
+def _(duckdb, get_league_data, league_id_input, pl):
+    def process_league_data():
+        league_data = get_league_data(league_id_input.value)
+        league_entries = league_data['league_entries']
+    
+        # Convert to Polars DataFrame
+        entries_df = pl.DataFrame(league_entries)
+    
+        # Create DuckDB table
+        duckdb.sql("CREATE TABLE IF NOT EXISTS league_entries AS SELECT * FROM entries_df")
+    
+        return entries_df
     return
 
 
