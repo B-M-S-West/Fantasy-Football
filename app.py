@@ -7,6 +7,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+    import pandas as pd
     import httpx
     import os
     from dotenv import load_dotenv
@@ -90,9 +91,15 @@ def _(Dict, LEAGUE_DATA_URL, List, MANAGER_HISTORY_URL, httpx):
 
 
 @app.cell
-def _(duckdb, entries_df, get_league_data, league_id, pl):
-    def process_league_data():
-        league_data = get_league_data(league_id)
+def _(league_id_input):
+    type(league_id_input)
+    return
+
+
+@app.cell
+def _(duckdb, get_league_data, league_id_input, pl):
+    def process_league_data(league_id_input):
+        league_data = get_league_data(league_id_input)
         league_entries = league_data['league_entries']
 
         # Convert to Polars DataFrame
@@ -102,11 +109,12 @@ def _(duckdb, entries_df, get_league_data, league_id, pl):
         duckdb.sql("CREATE TABLE IF NOT EXISTS league_entries AS SELECT * FROM entries_df")
 
         return entries_df
-    return
+    entries_df = process_league_data(league_id_input.value)
+    return (entries_df,)
 
 
 @app.cell
-def _(duckdb, get_manager_history, history_df, pl):
+def _(duckdb, entries_df, get_manager_history, pl):
     def process_historical_data(entries_df):
         all_history = []
 
@@ -122,7 +130,8 @@ def _(duckdb, get_manager_history, history_df, pl):
         duckdb.sql("CREATE TABLE IF NOT EXISTS manager_history AS SELECT * FROM history_df")
 
         return history_df
-    return
+    history_df = process_historical_data(entries_df)
+    return (history_df,)
 
 
 @app.cell
@@ -181,10 +190,9 @@ def _(duckdb, mo):
 
 @app.cell
 def _(mo):
-    def create_interactive_elements():
-        gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
-        return gameweek_selector
-    return
+    # Create a gameweek selector
+    gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
+    return (gameweek_selector,)
 
 
 @app.cell
