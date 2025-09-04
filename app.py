@@ -70,7 +70,7 @@ def _(load_dotenv, mo, os):
     )
 
     league_id_input
-    return
+    return (league_id_input,)
 
 
 @app.cell
@@ -102,7 +102,7 @@ def _(duckdb, entries_df, get_league_data, league_id, pl):
         duckdb.sql("CREATE TABLE IF NOT EXISTS league_entries AS SELECT * FROM entries_df")
 
         return entries_df
-    return (process_league_data,)
+    return
 
 
 @app.cell
@@ -153,7 +153,7 @@ def _(mo, pl, px):
         )
 
         return mo.md(f"## League Standings\n{fig}")
-    return
+    return (create_leaderboard,)
 
 
 @app.cell
@@ -176,7 +176,7 @@ def _(duckdb, mo):
         ## Top Gameweek Performances
         {top_scores.to_markdown()}
         """)
-    return
+    return (player_points_leaderboard,)
 
 
 @app.cell
@@ -206,13 +206,7 @@ def _(duckdb, mo):
         ## Gameweek {gameweek_selector.value} Results
         {gw_results.to_markdown()}
         """)
-    return
-
-
-@app.cell
-def _(process_league_data):
-    process_league_data()
-    return
+    return (gameweek_analysis,)
 
 
 @app.cell
@@ -288,7 +282,7 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
         ### Transfer Success Rates
         {transfer_stats.to_markdown()}
         """)
-    return
+    return (transfer_analysis_dashboard,)
 
 
 @app.cell
@@ -381,7 +375,7 @@ def _(duckdb, go, make_subplots, mo):
         ## Head-to-Head Comparison: {manager1.value} vs {manager2.value}
         {fig}
         """)
-    return
+    return (display_head_to_head,)
 
 
 @app.cell
@@ -457,7 +451,7 @@ def _(duckdb, mo, px):
         ### Top Performers
         {player_stats.to_markdown()}
         """)
-    return
+    return (display_player_performance,)
 
 
 @app.cell
@@ -471,8 +465,6 @@ def _(mo, pl):
             label="Select Team to Analyze"
         )
         gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
-
-        return team_selector, gameweek_selector
     return
 
 
@@ -533,7 +525,7 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
         ### Squad Details
         {team_composition.to_markdown()}
         """)
-    return
+    return (display_team_composition,)
 
 
 @app.cell
@@ -551,6 +543,80 @@ def _(mo):
 
         Enter your league ID above to get started!
         """)
+    return
+
+
+@app.cell
+def _(
+    create_leaderboard,
+    mo,
+    player_points_leaderboard,
+    transfer_analysis_dashboard,
+):
+    dashboard = mo.ui.tabs({
+            "Leaderboard": create_leaderboard,
+            "Top Performances": player_points_leaderboard,
+            "Transfers": transfer_analysis_dashboard,
+        })
+    return
+
+
+@app.cell
+def _(gameweek_selector, league_id_input, mo):
+    sidebar = mo.sidebar(
+            [
+                mo.md("### ⚙️ Settings"),
+                league_id_input,
+                gameweek_selector,
+            ],
+            footer=mo.md("Made with ❤️ and marimo"),
+            width="280px"
+        )
+    return (sidebar,)
+
+
+@app.cell
+def _(
+    create_leaderboard,
+    display_head_to_head,
+    display_player_performance,
+    display_team_composition,
+    elements_df,
+    entries_df,
+    gameweek_analysis,
+    gameweek_selector,
+    history_df,
+    manager1,
+    manager2,
+    mo,
+    player_points_leaderboard,
+    player_search,
+    position_filter,
+    team_selector,
+    transfer_analysis_dashboard,
+    transfers_df,
+):
+    tabs = mo.ui.tabs({
+            "📊 League Standings": create_leaderboard(history_df, entries_df),
+            "🏆 Top Performances": player_points_leaderboard(entries_df),
+            "⏳ Gameweek Results": gameweek_analysis(gameweek_selector),
+            "🔄 Transfers": transfer_analysis_dashboard(transfers_df, elements_df, entries_df),
+            "🤝 Head-to-Head": display_head_to_head(manager1, manager2, history_df, entries_df),
+            "⚡ Player Performance": display_player_performance(player_search, position_filter),
+            "📝 Team Composition": display_team_composition(team_selector, gameweek_selector, entries_df),
+        })
+    return (tabs,)
+
+
+@app.cell
+def _(mo, sidebar, tabs):
+    layout = mo.vstack([sidebar, tabs])
+    layout
+    return
+
+
+@app.cell
+def _():
     return
 
 
