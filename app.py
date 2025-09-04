@@ -57,11 +57,20 @@ def _():
 
 
 @app.cell
-def _(load_dotenv, os):
+def _(load_dotenv, mo, os):
+    # Load environment variables or create input widget
     load_dotenv()
-    league_id = os.getenv('LEAGUE_ID')
-    entry_id = os.getenv('ENTRY_ID')
-    return (league_id,)
+    env_league_id = os.getenv('LEAGUE_ID')
+
+    # Create league ID input widget
+    league_id_input = mo.ui.text(
+        label="League ID", 
+        value=env_league_id if env_league_id else "",
+        placeholder="Enter your Fantasy Draft League ID"
+    )
+
+    league_id_input
+    return
 
 
 @app.cell
@@ -211,15 +220,15 @@ def _(api_config, duckdb, elements_df, fetch_data, pl, transfers_df):
     def process_transfers(league_id_input):
         transfers = fetch_data(api_config['TRANSFERS_URL'].format(league_id_input.value))
         element_info = fetch_data(api_config['ELEMENT_INFO_URL'])['elements']
-    
+
         # Convert to Polars DataFrame
         transfers_df = pl.DataFrame(transfers['transactions'])
         elements_df = pl.DataFrame(element_info)
-    
+
         # Create DuckDB tables
         duckdb.sql("CREATE TABLE IF NOT EXISTS transfers AS SELECT * FROM transfers_df")
         duckdb.sql("CREATE TABLE IF NOT EXISTS elements AS SELECT * FROM elements_df")
-    
+
         return transfers_df, elements_df
     return
 
@@ -239,7 +248,7 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             GROUP BY manager
             ORDER BY total_transfers DESC
         """).df()
-    
+
         # Most transferred players
         player_transfers = duckdb.sql("""
             SELECT 
@@ -252,7 +261,7 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             ORDER BY transfer_attempts DESC
             LIMIT 10
         """).df()
-    
+
         # Create visualizations
         fig1 = px.bar(
             transfer_stats.to_pandas(),
@@ -260,22 +269,22 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             y=['successful_transfers', 'total_transfers'],
             title='Transfer Activity by Manager'
         )
-    
+
         fig2 = px.bar(
             player_transfers.to_pandas(),
             x='player_name',
             y=['successful_transfers', 'transfer_attempts'],
             title='Most Transferred Players'
         )
-    
+
         return mo.md(f"""
         ## Transfer Analysis
         ### Manager Transfer Activity
         {fig1}
-    
+
         ### Most Sought-After Players
         {fig2}
-    
+
         ### Transfer Success Rates
         {transfer_stats.to_markdown()}
         """)
@@ -298,7 +307,7 @@ def _(mo, pl):
             ).to_series().to_list(),
             label="Select Manager 2"
         )
-    
+
         return manager1, manager2
     return
 
@@ -308,7 +317,7 @@ def _(duckdb, go, make_subplots, mo):
     def display_head_to_head(manager1, manager2, history_df, entries_df):
         if not (manager1.value and manager2.value):
             return mo.md("Please select both managers to compare")
-    
+
         query = f"""
         WITH manager1_data AS (
             SELECT 
@@ -340,14 +349,14 @@ def _(duckdb, go, make_subplots, mo):
         JOIN manager2_data m2 ON m1.event = m2.event
         ORDER BY m1.event
         """
-    
+
         comparison_data = duckdb.sql(query).df()
-    
+
         fig = make_subplots(
             rows=2, cols=1,
             subplot_titles=('Gameweek Points Comparison', 'Total Points Progression')
         )
-    
+
         # Gameweek points comparison
         fig.add_trace(
             go.Bar(name=manager1.value, x=comparison_data['event'], y=comparison_data['m1_points']),
@@ -357,7 +366,7 @@ def _(duckdb, go, make_subplots, mo):
             go.Bar(name=manager2.value, x=comparison_data['event'], y=comparison_data['m2_points']),
             row=1, col=1
         )
-    
+
         # Total points progression
         fig.add_trace(
             go.Scatter(name=f"{manager1.value} (Total)", x=comparison_data['event'], y=comparison_data['m1_total']),
@@ -367,7 +376,7 @@ def _(duckdb, go, make_subplots, mo):
             go.Scatter(name=f"{manager2.value} (Total)", x=comparison_data['event'], y=comparison_data['m2_total']),
             row=2, col=1
         )
-    
+
         return mo.md(f"""
         ## Head-to-Head Comparison: {manager1.value} vs {manager2.value}
         {fig}
@@ -384,7 +393,7 @@ def _(mo):
             options=['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'],
             label="Filter by position"
         )
-    
+
         return player_search, position_filter
     return
 
@@ -398,15 +407,15 @@ def _(duckdb, mo, px):
             'Midfielder': 3,
             'Forward': 4
         }
-    
+
         position_clause = ""
         if position_filter.value != 'All':
             position_clause = f"AND element_type = {position_map[position_filter.value]}"
-    
+
         search_clause = ""
         if player_search.value:
             search_clause = f"AND web_name ILIKE '%{player_search.value}%'"
-    
+
         query = f"""
         SELECT 
             web_name,
@@ -428,9 +437,9 @@ def _(duckdb, mo, px):
         ORDER BY total_points DESC
         LIMIT 20
         """
-    
+
         player_stats = duckdb.sql(query).df()
-    
+
         fig = px.scatter(
             player_stats.to_pandas(),
             x='minutes',
@@ -440,11 +449,11 @@ def _(duckdb, mo, px):
             hover_data=['web_name', 'goals_scored', 'assists'],
             title='Player Performance Overview'
         )
-    
+
         return mo.md(f"""
         ## Player Performance Analysis
         {fig}
-    
+
         ### Top Performers
         {player_stats.to_markdown()}
         """)
@@ -462,7 +471,7 @@ def _(mo, pl):
             label="Select Team to Analyze"
         )
         gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
-    
+
         return team_selector, gameweek_selector
     return
 
@@ -472,16 +481,16 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
     def display_team_composition(team_selector, gameweek_selector, entries_df):
         if not team_selector.value:
             return mo.md("Please select a team to analyze")
-    
+
         # Get entry_id for selected team
         entry_id = entries_df.filter(
             pl.concat_str([pl.col('player_first_name'), pl.lit(' '), pl.col('player_last_name')]) == team_selector.value
         ).select('entry_id').item()
-    
+
         # Get team picks for selected gameweek
         picks = fetch_data(api_config['ENTRY_PICKS_URL'].format(entry_id, gameweek_selector.value))
         picks_df = pl.DataFrame(picks['picks'])
-    
+
         # Join with element info
         query = """
         SELECT 
@@ -501,9 +510,9 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
         JOIN elements e ON p.element = e.id
         ORDER BY p.position
         """
-    
+
         team_composition = duckdb.sql(query).df()
-    
+
         # Create formation visualization
         fig = px.scatter(
             team_composition.to_pandas(),
@@ -514,13 +523,13 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
             hover_data=['web_name', 'total_points'],
             title=f'Team Composition - GW{gameweek_selector.value}'
         )
-    
+
         return mo.md(f"""
         ## Team Composition Analysis for {team_selector.value}
-    
+
         ### Squad Overview
         {fig}
-    
+
         ### Squad Details
         {team_composition.to_markdown()}
         """)
@@ -532,14 +541,14 @@ def _(mo):
     def main_dashboard():
         return mo.md(f"""
         # Fantasy Premier League Draft Analytics Dashboard
-    
+
         ## Quick Navigation
         - [League Standings](#league-standings)
         - [Transfer Analysis](#transfer-analysis)
         - [Head-to-Head Comparison](#head-to-head-comparison)
         - [Player Performance](#player-performance-analysis)
         - [Team Composition](#team-composition-analysis)
-    
+
         Enter your league ID above to get started!
         """)
     return
