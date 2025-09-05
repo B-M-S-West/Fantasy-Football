@@ -69,9 +69,13 @@ def _(load_dotenv, mo, os):
         value=env_league_id if env_league_id else "",
         placeholder="Enter your Fantasy Draft League ID"
     )
-
-    league_id_input
     return (league_id_input,)
+
+
+@app.cell
+def _(league_id_input, mo):
+    mo.hstack([league_id_input, mo.md(f"League ID: {league_id_input.value}")])
+    return
 
 
 @app.cell
@@ -135,7 +139,7 @@ def _(duckdb, entries_df, get_manager_history, pl):
 
 
 @app.cell
-def _(mo, pl, px):
+def _(entries_df, history_df, mo, pl, px):
     def create_leaderboard(history_df, entries_df):
         # Join history with entry information
         plot_data = history_df.join(
@@ -162,6 +166,8 @@ def _(mo, pl, px):
         )
 
         return mo.md(f"## League Standings\n{fig}")
+
+    leaderboard = create_leaderboard(history_df, entries_df)
     return (create_leaderboard,)
 
 
@@ -191,8 +197,14 @@ def _(duckdb, mo):
 @app.cell
 def _(mo):
     # Create a gameweek selector
-    gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
+    gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek", value=1)
     return (gameweek_selector,)
+
+
+@app.cell
+def _(gameweek_selector, mo):
+    mo.hstack([gameweek_selector, mo.md(f"Gameweek: {gameweek_selector.value}")])
+    return
 
 
 @app.cell
