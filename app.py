@@ -54,7 +54,12 @@ def _():
     TRANSFERS_URL = 'https://draft.premierleague.com/api/draft/league/{}/transactions'
     DRAFTS_URL = 'https://draft.premierleague.com/api/draft/{}/choices'
     MANAGER_HISTORY_URL = 'https://draft.premierleague.com/api/entry/{}/history'
-    return LEAGUE_DATA_URL, MANAGER_HISTORY_URL
+    return (
+        ELEMENT_INFO_URL,
+        LEAGUE_DATA_URL,
+        MANAGER_HISTORY_URL,
+        TRANSFERS_URL,
+    )
 
 
 @app.cell
@@ -230,10 +235,17 @@ def _(duckdb, mo):
 
 
 @app.cell
-def _(api_config, duckdb, elements_df, fetch_data, pl, transfers_df):
+def _(
+    ELEMENT_INFO_URL,
+    TRANSFERS_URL,
+    duckdb,
+    fetch_data,
+    league_id_input,
+    pl,
+):
     def process_transfers(league_id_input):
-        transfers = fetch_data(api_config['TRANSFERS_URL'].format(league_id_input.value))
-        element_info = fetch_data(api_config['ELEMENT_INFO_URL'])['elements']
+        transfers = fetch_data(TRANSFERS_URL.format(league_id_input.value))
+        element_info = fetch_data(ELEMENT_INFO_URL)['elements']
 
         # Convert to Polars DataFrame
         transfers_df = pl.DataFrame(transfers['transactions'])
@@ -244,7 +256,9 @@ def _(api_config, duckdb, elements_df, fetch_data, pl, transfers_df):
         duckdb.sql("CREATE TABLE IF NOT EXISTS elements AS SELECT * FROM elements_df")
 
         return transfers_df, elements_df
-    return
+
+    transfers_df, elements_df = process_transfers(league_id_input)
+    return elements_df, transfers_df
 
 
 @app.cell
@@ -278,14 +292,14 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
 
         # Create visualizations
         fig1 = px.bar(
-            transfer_stats.to_pandas(),
+            transfer_stats,
             x='manager',
             y=['successful_transfers', 'total_transfers'],
             title='Transfer Activity by Manager'
         )
 
         fig2 = px.bar(
-            player_transfers.to_pandas(),
+            player_transfers,
             x='player_name',
             y=['successful_transfers', 'transfer_attempts'],
             title='Most Transferred Players'
@@ -323,6 +337,26 @@ def _(mo, pl):
         )
 
         return manager1, manager2
+    return
+
+
+@app.cell
+def _(entries_df, mo):
+    # Create dropdowns based on available managers
+    manager_options = entries_df["player_first_name"] + " " + entries_df["player_last_name"]
+
+    manager1 = mo.ui.dropdown(manager_options, label="Select Manager 1")
+    manager2 = mo.ui.dropdown(manager_options, label="Select Manager 2")
+
+    return manager1, manager2
+
+
+@app.cell
+def _(manager1, manager2, mo):
+    # Render UI and head-to-head comparison
+    mo.vstack([
+        manager1,
+        manager2])
     return
 
 
@@ -400,20 +434,27 @@ def _(duckdb, go, make_subplots, mo):
 
 @app.cell
 def _(mo):
-    def player_performance_dashboard():
-        # Create player search input
-        player_search = mo.ui.text(label="Search for a player")
-        position_filter = mo.ui.dropdown(
-            options=['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'],
-            label="Filter by position"
-        )
+    # UI Controls
+    player_search = mo.ui.text(label="Search for a player")
+    position_filter = mo.ui.dropdown(
+        options=['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'],
+        label="Filter by position"
+    )
+    return player_search, position_filter
 
-        return player_search, position_filter
+
+@app.cell
+def _(display_player_performance, mo, player_search, position_filter):
+    # Combine controls + visualization
+    mo.vstack([
+        mo.hstack([player_search, position_filter]),
+        display_player_performance(player_search, position_filter)
+    ])
     return
 
 
 @app.cell
-def _(duckdb, mo, px):
+def _(duckdb, mo, positon_filter, px):
     def display_player_performance(player_search, position_filter):
         position_map = {
             'Goalkeeper': 1,
@@ -424,7 +465,9 @@ def _(duckdb, mo, px):
 
         position_clause = ""
         if position_filter.value != 'All':
-            position_clause = f"AND element_type = {position_map[position_filter.value]}"
+            position_clause = ""
+        else:
+            position_clause = f"AND element_type = {position_map[positon_filter.value]}"
 
         search_clause = ""
         if player_search.value:
@@ -455,7 +498,7 @@ def _(duckdb, mo, px):
         player_stats = duckdb.sql(query).df()
 
         fig = px.scatter(
-            player_stats.to_pandas(),
+            player_stats,
             x='minutes',
             y='total_points',
             color='position',
@@ -485,6 +528,24 @@ def _(mo, pl):
             label="Select Team to Analyze"
         )
         gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
+    return
+
+
+@app.cell
+def _(entries_df, mo, pl):
+    # Create dropdowns based on available managers
+    teams_options = entries_df.select(
+                pl.concat_str([pl.col('player_first_name'), pl.lit(' '), pl.col('player_last_name')])
+            ).to_series().to_list()
+
+    team_selector = mo.ui.dropdown(teams_options, label="Select Team")
+    return (team_selector,)
+
+
+@app.cell
+def _(mo, team_selector):
+    # Render UI and head-to-head comparison
+    mo.vstack([team_selector])
     return
 
 
