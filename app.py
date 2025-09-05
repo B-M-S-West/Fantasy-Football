@@ -4,36 +4,7 @@ __generated_with = "0.15.2"
 app = marimo.App(width="medium")
 
 
-@app.cell
-def _():
-    import marimo as mo
-    import pandas as pd
-    import httpx
-    import os
-    from dotenv import load_dotenv
-    import polars as pl
-    import duckdb
-    import plotly.express as px
-    from typing import Dict, List
-    import networkx as nx
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    return (
-        Dict,
-        List,
-        duckdb,
-        go,
-        httpx,
-        load_dotenv,
-        make_subplots,
-        mo,
-        os,
-        pl,
-        px,
-    )
-
-
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -45,21 +16,68 @@ def _(mo):
 
 
 @app.cell
-def _():
-    GAME_STATUS_URL = 'https://draft.premierleague.com/api/game'
-    ELEMENT_INFO_URL = 'https://draft.premierleague.com/api/bootstrap-static'
-    LEAGUE_DATA_URL = 'https://draft.premierleague.com/api/league/{}/details'
-    ENTRY_PICKS_URL = 'https://draft.premierleague.com/api/entry/{}/event/{}'
-    ELEMENT_STATS_URL = 'https://draft.premierleague.com/api/event/{}/live'
-    TRANSFERS_URL = 'https://draft.premierleague.com/api/draft/league/{}/transactions'
-    DRAFTS_URL = 'https://draft.premierleague.com/api/draft/{}/choices'
-    MANAGER_HISTORY_URL = 'https://draft.premierleague.com/api/entry/{}/history'
-    return (
-        ELEMENT_INFO_URL,
-        LEAGUE_DATA_URL,
-        MANAGER_HISTORY_URL,
-        TRANSFERS_URL,
-    )
+def _(mo, sidebar, tabs):
+    layout = mo.vstack([sidebar, tabs])
+    layout
+    return
+
+
+@app.cell
+def _(
+    gameweek_selector,
+    league_id_input,
+    manager1,
+    manager2,
+    mo,
+    team_selector,
+):
+    sidebar = mo.sidebar(
+            [
+                mo.md("### ⚙️ League Details"),
+                league_id_input,
+                gameweek_selector,
+                team_selector,
+                mo.md("### ⚙️ Head to head"),
+                manager1, 
+                manager2,
+            ],
+            footer=mo.md("Made with marimo ⚽"),
+            width="280px"
+        )
+    return (sidebar,)
+
+
+@app.cell
+def _(
+    create_leaderboard,
+    display_head_to_head,
+    display_player_performance,
+    display_team_composition,
+    elements_df,
+    entries_df,
+    gameweek_analysis,
+    gameweek_selector,
+    history_df,
+    manager1,
+    manager2,
+    mo,
+    player_points_leaderboard,
+    player_search,
+    position_filter,
+    team_selector,
+    transfer_analysis_dashboard,
+    transfers_df,
+):
+    tabs = mo.ui.tabs({
+            "📊 League Standings": create_leaderboard(history_df, entries_df),
+            "🏆 Top Performances": player_points_leaderboard(entries_df),
+            "⏳ Gameweek Results": gameweek_analysis(gameweek_selector),
+            "🔄 Transfers": transfer_analysis_dashboard(transfers_df, elements_df, entries_df),
+            "🤝 Head-to-Head": display_head_to_head(manager1, manager2, history_df, entries_df),
+            "⚡ Player Performance": display_player_performance(player_search, position_filter),
+            "📝 Team Composition": display_team_composition(team_selector, gameweek_selector, entries_df),
+        })
+    return (tabs,)
 
 
 @app.cell
@@ -84,6 +102,95 @@ def _(league_id_input, mo):
 
 
 @app.cell
+def _(mo):
+    # Create a gameweek selector
+    gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek", value=1)
+    return (gameweek_selector,)
+
+
+@app.cell
+def _(gameweek_selector, mo):
+    mo.hstack([gameweek_selector, mo.md(f"Gameweek: {gameweek_selector.value}")])
+    return
+
+
+@app.cell
+def _(entries_df, mo):
+    # Create dropdowns based on available managers
+    manager_options = entries_df["player_first_name"] + " " + entries_df["player_last_name"]
+
+    manager1 = mo.ui.dropdown(manager_options, label="Select Manager 1")
+    manager2 = mo.ui.dropdown(manager_options, label="Select Manager 2")
+    return manager1, manager2
+
+
+@app.cell
+def _(manager1, manager2, mo):
+    # Render UI and head-to-head comparison
+    mo.vstack([
+        manager1,
+        manager2])
+    return
+
+
+@app.cell
+def _(mo):
+    # UI Controls
+    player_search = mo.ui.text(label="Search for a player")
+    position_filter = mo.ui.dropdown(
+        options=['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'],
+        label="Filter by position"
+    )
+    return player_search, position_filter
+
+
+@app.cell
+def _(display_player_performance, mo, player_search, position_filter):
+    # Combine controls + visualization
+    mo.vstack([
+        mo.hstack([player_search, position_filter]),
+        display_player_performance(player_search, position_filter)
+    ])
+    return
+
+
+@app.cell
+def _(entries_df, mo, pl):
+    # Create dropdowns based on available managers
+    teams_options = entries_df.select(
+                pl.concat_str([pl.col('player_first_name'), pl.lit(' '), pl.col('player_last_name')])
+            ).to_series().to_list()
+
+    team_selector = mo.ui.dropdown(teams_options, label="Select Team")
+    return (team_selector,)
+
+
+@app.cell
+def _(mo, team_selector):
+    # Render UI and head-to-head comparison
+    mo.vstack([team_selector])
+    return
+
+
+@app.cell
+def _():
+    GAME_STATUS_URL = 'https://draft.premierleague.com/api/game'
+    ELEMENT_INFO_URL = 'https://draft.premierleague.com/api/bootstrap-static'
+    LEAGUE_DATA_URL = 'https://draft.premierleague.com/api/league/{}/details'
+    ENTRY_PICKS_URL = 'https://draft.premierleague.com/api/entry/{}/event/{}'
+    ELEMENT_STATS_URL = 'https://draft.premierleague.com/api/event/{}/live'
+    TRANSFERS_URL = 'https://draft.premierleague.com/api/draft/league/{}/transactions'
+    DRAFTS_URL = 'https://draft.premierleague.com/api/draft/{}/choices'
+    MANAGER_HISTORY_URL = 'https://draft.premierleague.com/api/entry/{}/history'
+    return (
+        ELEMENT_INFO_URL,
+        LEAGUE_DATA_URL,
+        MANAGER_HISTORY_URL,
+        TRANSFERS_URL,
+    )
+
+
+@app.cell
 def _(Dict, LEAGUE_DATA_URL, List, MANAGER_HISTORY_URL, httpx):
     def fetch_data(url: str) -> Dict:
         response = httpx.get(url)
@@ -97,12 +204,6 @@ def _(Dict, LEAGUE_DATA_URL, List, MANAGER_HISTORY_URL, httpx):
         url = (MANAGER_HISTORY_URL).format(entry_id)
         return fetch_data(url)["history"]
     return fetch_data, get_league_data, get_manager_history
-
-
-@app.cell
-def _(league_id_input):
-    type(league_id_input)
-    return
 
 
 @app.cell
@@ -161,16 +262,25 @@ def _(entries_df, history_df, mo, pl, px):
             ]).alias('manager_name')
         ])
 
-        # Create line plot
+        # Create and display the chart
         fig = px.line(
             plot_data.to_pandas(),
             x='event',
             y='total_points',
             color='manager_name',
-            title='Fantasy League Points Progression'
+            title='Fantasy League Points Progression',
+            markers=True  # Add markers for better visibility
         )
-
-        return mo.md(f"## League Standings\n{fig}")
+    
+        # Clean up the layout
+        fig.update_layout(
+            xaxis_title="Game Week",
+            yaxis_title="Total Points",
+            legend_title="Manager",
+            hovermode='x unified'
+        )
+    
+        return mo.ui.plotly(fig)
 
     leaderboard = create_leaderboard(history_df, entries_df)
     return (create_leaderboard,)
@@ -197,19 +307,6 @@ def _(duckdb, mo):
         {top_scores.to_markdown()}
         """)
     return (player_points_leaderboard,)
-
-
-@app.cell
-def _(mo):
-    # Create a gameweek selector
-    gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek", value=1)
-    return (gameweek_selector,)
-
-
-@app.cell
-def _(gameweek_selector, mo):
-    mo.hstack([gameweek_selector, mo.md(f"Gameweek: {gameweek_selector.value}")])
-    return
 
 
 @app.cell
@@ -341,26 +438,6 @@ def _(mo, pl):
 
 
 @app.cell
-def _(entries_df, mo):
-    # Create dropdowns based on available managers
-    manager_options = entries_df["player_first_name"] + " " + entries_df["player_last_name"]
-
-    manager1 = mo.ui.dropdown(manager_options, label="Select Manager 1")
-    manager2 = mo.ui.dropdown(manager_options, label="Select Manager 2")
-
-    return manager1, manager2
-
-
-@app.cell
-def _(manager1, manager2, mo):
-    # Render UI and head-to-head comparison
-    mo.vstack([
-        manager1,
-        manager2])
-    return
-
-
-@app.cell
 def _(duckdb, go, make_subplots, mo):
     def display_head_to_head(manager1, manager2, history_df, entries_df):
         if not (manager1.value and manager2.value):
@@ -433,27 +510,6 @@ def _(duckdb, go, make_subplots, mo):
 
 
 @app.cell
-def _(mo):
-    # UI Controls
-    player_search = mo.ui.text(label="Search for a player")
-    position_filter = mo.ui.dropdown(
-        options=['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'],
-        label="Filter by position"
-    )
-    return player_search, position_filter
-
-
-@app.cell
-def _(display_player_performance, mo, player_search, position_filter):
-    # Combine controls + visualization
-    mo.vstack([
-        mo.hstack([player_search, position_filter]),
-        display_player_performance(player_search, position_filter)
-    ])
-    return
-
-
-@app.cell
 def _(duckdb, mo, positon_filter, px):
     def display_player_performance(player_search, position_filter):
         position_map = {
@@ -507,13 +563,16 @@ def _(duckdb, mo, positon_filter, px):
             title='Player Performance Overview'
         )
 
-        return mo.md(f"""
-        ## Player Performance Analysis
-        {fig}
+        fig.update_layout(
+            legend_title="Position",
+            xaxis_title="Minutes",
+            yaxis_title="Total Points",
+        )
 
-        ### Top Performers
-        {player_stats.to_markdown()}
-        """)
+        return mo.vstack([
+            mo.md("## Player Performance Analysis"),
+            mo.ui.plotly(fig)
+        ])
     return (display_player_performance,)
 
 
@@ -528,24 +587,6 @@ def _(mo, pl):
             label="Select Team to Analyze"
         )
         gameweek_selector = mo.ui.slider(1, 38, label="Select Gameweek")
-    return
-
-
-@app.cell
-def _(entries_df, mo, pl):
-    # Create dropdowns based on available managers
-    teams_options = entries_df.select(
-                pl.concat_str([pl.col('player_first_name'), pl.lit(' '), pl.col('player_last_name')])
-            ).to_series().to_list()
-
-    team_selector = mo.ui.dropdown(teams_options, label="Select Team")
-    return (team_selector,)
-
-
-@app.cell
-def _(mo, team_selector):
-    # Render UI and head-to-head comparison
-    mo.vstack([team_selector])
     return
 
 
@@ -610,95 +651,33 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
 
 
 @app.cell
-def _(mo):
-    def main_dashboard():
-        return mo.md(f"""
-        # Fantasy Premier League Draft Analytics Dashboard
-
-        ## Quick Navigation
-        - [League Standings](#league-standings)
-        - [Transfer Analysis](#transfer-analysis)
-        - [Head-to-Head Comparison](#head-to-head-comparison)
-        - [Player Performance](#player-performance-analysis)
-        - [Team Composition](#team-composition-analysis)
-
-        Enter your league ID above to get started!
-        """)
-    return
-
-
-@app.cell
-def _(
-    create_leaderboard,
-    mo,
-    player_points_leaderboard,
-    transfer_analysis_dashboard,
-):
-    dashboard = mo.ui.tabs({
-            "Leaderboard": create_leaderboard,
-            "Top Performances": player_points_leaderboard,
-            "Transfers": transfer_analysis_dashboard,
-        })
-    return
-
-
-@app.cell
-def _(gameweek_selector, league_id_input, mo):
-    sidebar = mo.sidebar(
-            [
-                mo.md("### ⚙️ Settings"),
-                league_id_input,
-                gameweek_selector,
-            ],
-            footer=mo.md("Made with ❤️ and marimo"),
-            width="280px"
-        )
-    return (sidebar,)
-
-
-@app.cell
-def _(
-    create_leaderboard,
-    display_head_to_head,
-    display_player_performance,
-    display_team_composition,
-    elements_df,
-    entries_df,
-    gameweek_analysis,
-    gameweek_selector,
-    history_df,
-    manager1,
-    manager2,
-    mo,
-    player_points_leaderboard,
-    player_search,
-    position_filter,
-    team_selector,
-    transfer_analysis_dashboard,
-    transfers_df,
-):
-    tabs = mo.ui.tabs({
-            "📊 League Standings": create_leaderboard(history_df, entries_df),
-            "🏆 Top Performances": player_points_leaderboard(entries_df),
-            "⏳ Gameweek Results": gameweek_analysis(gameweek_selector),
-            "🔄 Transfers": transfer_analysis_dashboard(transfers_df, elements_df, entries_df),
-            "🤝 Head-to-Head": display_head_to_head(manager1, manager2, history_df, entries_df),
-            "⚡ Player Performance": display_player_performance(player_search, position_filter),
-            "📝 Team Composition": display_team_composition(team_selector, gameweek_selector, entries_df),
-        })
-    return (tabs,)
-
-
-@app.cell
-def _(mo, sidebar, tabs):
-    layout = mo.vstack([sidebar, tabs])
-    layout
-    return
-
-
-@app.cell
 def _():
-    return
+    import marimo as mo
+    import pandas as pd
+    import numpy as np
+    import httpx
+    import os
+    from dotenv import load_dotenv
+    import polars as pl
+    import duckdb
+    import plotly.express as px
+    from typing import Dict, List
+    import networkx as nx
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    return (
+        Dict,
+        List,
+        duckdb,
+        go,
+        httpx,
+        load_dotenv,
+        make_subplots,
+        mo,
+        os,
+        pl,
+        px,
+    )
 
 
 if __name__ == "__main__":
