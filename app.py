@@ -145,11 +145,10 @@ def _(mo):
 
 
 @app.cell
-def _(display_player_performance, mo, player_search, position_filter):
+def _(mo, player_search, position_filter):
     # Combine controls + visualization
     mo.vstack([
-        mo.hstack([player_search, position_filter]),
-        display_player_performance(player_search, position_filter)
+        mo.hstack([player_search, position_filter])
     ])
     return
 
@@ -269,17 +268,23 @@ def _(entries_df, history_df, mo, pl, px):
             y='total_points',
             color='manager_name',
             title='Fantasy League Points Progression',
-            markers=True  # Add markers for better visibility
+            markers=True, 
+            labels={
+                'event': 'Game Week', 
+                'total_points': 'Total Points', 
+                'manager_name': 'Manager'
+            }
         )
-    
-        # Clean up the layout
+
+        # Add advanced features - Hovermode and change the x axis change to integer
         fig.update_layout(
-            xaxis_title="Game Week",
-            yaxis_title="Total Points",
-            legend_title="Manager",
-            hovermode='x unified'
+            hovermode='x unified',
+            xaxis=dict(
+                tickmode="linear", 
+                dtick=1
+            )
         )
-    
+
         return mo.ui.plotly(fig)
 
     leaderboard = create_leaderboard(history_df, entries_df)
@@ -302,10 +307,10 @@ def _(duckdb, mo):
 
         top_scores = duckdb.sql(query).df()
 
-        return mo.md(f"""
-        ## Top Gameweek Performances
-        {top_scores.to_markdown()}
-        """)
+        return mo.vstack([
+            mo.md("## Top Gameweek Performances"), 
+            mo.ui.table(top_scores)
+        ])
     return (player_points_leaderboard,)
 
 
@@ -324,10 +329,10 @@ def _(duckdb, mo):
 
         gw_results = duckdb.sql(query).df()
 
-        return mo.md(f"""
-        ## Gameweek {gameweek_selector.value} Results
-        {gw_results.to_markdown()}
-        """)
+        return mo.vstack([
+            mo.md(f"## Gameweek {gameweek_selector.value} Results"), 
+            mo.ui.table(gw_results)
+        ])
     return (gameweek_analysis,)
 
 
@@ -392,27 +397,30 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             transfer_stats,
             x='manager',
             y=['successful_transfers', 'total_transfers'],
-            title='Transfer Activity by Manager'
+            title='Transfer Activity by Manager',
+            barmode="group"
         )
 
         fig2 = px.bar(
             player_transfers,
             x='player_name',
             y=['successful_transfers', 'transfer_attempts'],
-            title='Most Transferred Players'
+            title='Most Transferred Players', 
+            barmode="group"
         )
 
-        return mo.md(f"""
-        ## Transfer Analysis
-        ### Manager Transfer Activity
-        {fig1}
+        return mo.vstack([
+            mo.md("## Transfer Analysis"), 
 
-        ### Most Sought-After Players
-        {fig2}
+            mo.md("### Manager Transfer Activity"), 
+            mo.ui.plotly(fig1),
 
-        ### Transfer Success Rates
-        {transfer_stats.to_markdown()}
-        """)
+            mo.md("### Most Sought-After Players"), 
+            mo.ui.plotly(fig2), 
+
+            mo.md("### Transfer Success Rates"), 
+            mo.ui.table(transfer_stats)
+        ])
     return (transfer_analysis_dashboard,)
 
 
@@ -502,15 +510,21 @@ def _(duckdb, go, make_subplots, mo):
             row=2, col=1
         )
 
-        return mo.md(f"""
-        ## Head-to-Head Comparison: {manager1.value} vs {manager2.value}
-        {fig}
-        """)
+        fig.update_xaxes(
+            tickmode="linear",
+            dtick=1, 
+            title_text="Game Week"
+        )
+
+        return mo.vstack([
+            mo.md(f"Head-to-Head Comparison: {manager1.value} vs {manager2.value}"),
+            mo.ui.plotly(fig)
+        ])
     return (display_head_to_head,)
 
 
 @app.cell
-def _(duckdb, mo, positon_filter, px):
+def _(duckdb, mo, px):
     def display_player_performance(player_search, position_filter):
         position_map = {
             'Goalkeeper': 1,
@@ -520,11 +534,8 @@ def _(duckdb, mo, positon_filter, px):
         }
 
         position_clause = ""
-        if position_filter.value != 'All':
-            position_clause = ""
-        else:
-            position_clause = f"AND element_type = {position_map[positon_filter.value]}"
-
+        if position_filter.value and position_filter.value != 'All':
+            position_clause = f"AND element_type = {position_map[position_filter.value]}"
         search_clause = ""
         if player_search.value:
             search_clause = f"AND web_name ILIKE '%{player_search.value}%'"
@@ -571,7 +582,9 @@ def _(duckdb, mo, positon_filter, px):
 
         return mo.vstack([
             mo.md("## Player Performance Analysis"),
-            mo.ui.plotly(fig)
+            mo.ui.plotly(fig),
+            mo.md("### Top Performers"),
+            mo.ui.table(player_stats)
         ])
     return (display_player_performance,)
 
@@ -647,6 +660,7 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
         ### Squad Details
         {team_composition.to_markdown()}
         """)
+    
     return (display_team_composition,)
 
 
