@@ -16,34 +16,37 @@ def _(mo):
 
 
 @app.cell
-def _(mo, sidebar, tabs):
-    layout = mo.vstack([sidebar, tabs])
-    layout
+def _(mo, routes, sidebar):
+    # Page layout with sidebar + routes
+    mo.vstack([sidebar, routes])
+
     return
 
 
 @app.cell
-def _(
-    gameweek_selector,
-    league_id_input,
-    manager1,
-    manager2,
-    mo,
-    team_selector,
-):
+def _(league_id_input, mo):
+    # Sidebar with league ID + navigation
     sidebar = mo.sidebar(
-            [
-                mo.md("### ⚙️ League Details"),
-                league_id_input,
-                gameweek_selector,
-                team_selector,
-                mo.md("### ⚙️ Head to head"),
-                manager1, 
-                manager2,
-            ],
-            footer=mo.md("Made with marimo ⚽"),
-            width="280px"
-        )
+        [
+            mo.md("### ⚙️ League Details"),
+            league_id_input,
+            mo.nav_menu(
+                {
+                    "#/": "Welcome Page",
+                    "#/standings": f"{mo.icon('lucide:bar-chart')} League Standings",
+                    "#/performances": f"{mo.icon('lucide:award')} Top Performances",
+                    "#/gameweeks": f"{mo.icon('lucide:hourglass')} Gameweek Results",
+                    "#/transfers": f"{mo.icon('lucide:repeat')} Transfers",
+                    "#/h2h": f"{mo.icon('lucide:users')} Head-to-Head",
+                    "#/players": f"{mo.icon('lucide:zap')} Player Performance",
+                    "#/teams": f"{mo.icon('lucide:list')} Team Composition",
+                },
+                orientation="vertical",
+            ),
+        ],
+        footer=mo.md("Made with marimo ⚽"),
+        width="280px"
+    )
     return (sidebar,)
 
 
@@ -68,16 +71,33 @@ def _(
     transfer_analysis_dashboard,
     transfers_df,
 ):
-    tabs = mo.ui.tabs({
-            "📊 League Standings": create_leaderboard(history_df, entries_df),
-            "🏆 Top Performances": player_points_leaderboard(entries_df),
-            "⏳ Gameweek Results": gameweek_analysis(gameweek_selector),
-            "🔄 Transfers": transfer_analysis_dashboard(transfers_df, elements_df, entries_df),
-            "🤝 Head-to-Head": display_head_to_head(manager1, manager2, history_df, entries_df),
-            "⚡ Player Performance": display_player_performance(player_search, position_filter),
-            "📝 Team Composition": display_team_composition(team_selector, gameweek_selector, entries_df),
-        })
-    return (tabs,)
+    # Define routes: each path is like a page
+    routes = mo.routes({
+        "#/standings": mo.vstack([
+            gameweek_selector,
+            team_selector,
+            create_leaderboard(history_df, entries_df),
+        ]),
+        "#/performances": player_points_leaderboard(entries_df),
+        "#/gameweeks": mo.vstack([
+            gameweek_selector,
+            gameweek_analysis(gameweek_selector),
+        ]),
+        "#/transfers": transfer_analysis_dashboard(transfers_df, elements_df, entries_df),
+        "#/h2h": mo.vstack([
+            manager1, manager2,
+            display_head_to_head(manager1, manager2, history_df, entries_df),
+        ]),
+        "#/players": mo.vstack([
+            player_search, position_filter,
+            display_player_performance(player_search, position_filter),
+        ]),
+        "#/teams": mo.vstack([
+            team_selector, gameweek_selector,
+            display_team_composition(team_selector, gameweek_selector, entries_df),
+        ])
+    })
+    return (routes,)
 
 
 @app.cell
@@ -660,7 +680,6 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
         ### Squad Details
         {team_composition.to_markdown()}
         """)
-    
     return (display_team_composition,)
 
 
