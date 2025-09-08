@@ -10,6 +10,8 @@ def _(mo):
         r"""
     ## Fantasy Draft Premier League Statistics
     This is a marimo python application for display data from a Fantasy Premier Draft league. All you need to input is the code for your draft league and then run the application for it to populate everything in all of the tables and the statistics diagrams. Contact me for any additional functionality required or things to put into a roadmap. This is just a fun personal project.
+
+    Use the sidebar to navigate between the different analysis pages
     """
     )
     return
@@ -19,7 +21,6 @@ def _(mo):
 def _(mo, routes, sidebar):
     # Page layout with sidebar + routes
     mo.vstack([sidebar, routes])
-
     return
 
 
@@ -75,7 +76,6 @@ def _(
     routes = mo.routes({
         "#/standings": mo.vstack([
             gameweek_selector,
-            team_selector,
             create_leaderboard(history_df, entries_df),
         ]),
         "#/performances": player_points_leaderboard(entries_df),
@@ -116,8 +116,9 @@ def _(load_dotenv, mo, os):
 
 
 @app.cell
-def _(league_id_input, mo):
-    mo.hstack([league_id_input, mo.md(f"League ID: {league_id_input.value}")])
+def _():
+    # Creates the interactive widget to input league ID on one side and display the output on the other
+    # mo.hstack([league_id_input, mo.md(f"League ID: {league_id_input.value}")])
     return
 
 
@@ -129,8 +130,9 @@ def _(mo):
 
 
 @app.cell
-def _(gameweek_selector, mo):
-    mo.hstack([gameweek_selector, mo.md(f"Gameweek: {gameweek_selector.value}")])
+def _():
+    # Creates an interactive widget for selecting gameweek and display gameweek on the right
+    # mo.hstack([gameweek_selector, mo.md(f"Gameweek: {gameweek_selector.value}")])
     return
 
 
@@ -145,11 +147,11 @@ def _(entries_df, mo):
 
 
 @app.cell
-def _(manager1, manager2, mo):
+def _():
     # Render UI and head-to-head comparison
-    mo.vstack([
-        manager1,
-        manager2])
+    #mo.vstack([
+    #    manager1,
+    #    manager2])
     return
 
 
@@ -165,11 +167,11 @@ def _(mo):
 
 
 @app.cell
-def _(mo, player_search, position_filter):
+def _():
     # Combine controls + visualization
-    mo.vstack([
-        mo.hstack([player_search, position_filter])
-    ])
+    #mo.vstack([
+    #    mo.hstack([player_search, position_filter])
+    #])
     return
 
 
@@ -185,9 +187,9 @@ def _(entries_df, mo, pl):
 
 
 @app.cell
-def _(mo, team_selector):
+def _():
     # Render UI and head-to-head comparison
-    mo.vstack([team_selector])
+    #mo.vstack([team_selector])
     return
 
 
@@ -624,7 +626,7 @@ def _(mo, pl):
 
 
 @app.cell
-def _(api_config, duckdb, fetch_data, mo, pl, px):
+def _(duckdb, fetch_data, mo, pl, px):
     def display_team_composition(team_selector, gameweek_selector, entries_df):
         if not team_selector.value:
             return mo.md("Please select a team to analyze")
@@ -635,7 +637,7 @@ def _(api_config, duckdb, fetch_data, mo, pl, px):
         ).select('entry_id').item()
 
         # Get team picks for selected gameweek
-        picks = fetch_data(api_config['ENTRY_PICKS_URL'].format(entry_id, gameweek_selector.value))
+        picks = fetch_data('ENTRY_PICKS_URL'.format(entry_id, gameweek_selector.value))
         picks_df = pl.DataFrame(picks['picks'])
 
         # Join with element info
