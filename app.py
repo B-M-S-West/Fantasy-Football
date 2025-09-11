@@ -60,6 +60,7 @@ def _(
     elements_df,
     entries_df,
     gameweek_analysis,
+    gameweek_range,
     gameweek_selector,
     history_df,
     manager1,
@@ -75,7 +76,7 @@ def _(
     # Define routes: each path is like a page
     routes = mo.routes({
         "#/standings": mo.vstack([
-            gameweek_selector,
+            gameweek_range,
             create_leaderboard(history_df, entries_df),
         ]),
         "#/performances": player_points_leaderboard(entries_df),
@@ -134,6 +135,13 @@ def _():
     # Creates an interactive widget for selecting gameweek and display gameweek on the right
     # mo.hstack([gameweek_selector, mo.md(f"Gameweek: {gameweek_selector.value}")])
     return
+
+
+@app.cell
+def _(mo):
+    # create a gameweek range selector
+    gameweek_range = mo.ui.range_slider(start=1, stop=38, step=1, label="Select Gameweek Range")
+    return (gameweek_range,)
 
 
 @app.cell
