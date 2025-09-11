@@ -77,7 +77,7 @@ def _(
     routes = mo.routes({
         "#/standings": mo.vstack([
             gameweek_range,
-            create_leaderboard(history_df, entries_df),
+            create_leaderboard(history_df, entries_df, gameweek_range),
         ]),
         "#/performances": player_points_leaderboard(entries_df),
         "#/gameweeks": mo.vstack([
@@ -274,8 +274,8 @@ def _(duckdb, entries_df, get_manager_history, pl):
 
 
 @app.cell
-def _(entries_df, history_df, mo, pl, px):
-    def create_leaderboard(history_df, entries_df):
+def _(entries_df, gameweek_range, history_df, mo, pl, px):
+    def create_leaderboard(history_df, entries_df, gameweek_range):
         # Join history with entry information
         plot_data = history_df.join(
             entries_df.select(['entry_id', 'player_first_name', 'player_last_name']),
@@ -290,6 +290,12 @@ def _(entries_df, history_df, mo, pl, px):
                 pl.col('player_last_name')
             ]).alias('manager_name')
         ])
+
+        # Filter data based on gameweek range
+        plot_data = plot_data.filter(
+            (pl.col('event') >= gameweek_range.value[0]) & 
+            (pl.col('event') <= gameweek_range.value[1])
+        )
 
         # Create and display the chart
         fig = px.line(
@@ -317,7 +323,7 @@ def _(entries_df, history_df, mo, pl, px):
 
         return mo.ui.plotly(fig)
 
-    leaderboard = create_leaderboard(history_df, entries_df)
+    leaderboard = create_leaderboard(history_df, entries_df, gameweek_range)
     return (create_leaderboard,)
 
 
