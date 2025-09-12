@@ -33,7 +33,6 @@ def _(league_id_input, mo):
             league_id_input,
             mo.nav_menu(
                 {
-                    "#/": "Welcome Page",
                     "#/standings": f"{mo.icon('lucide:bar-chart')} League Standings",
                     "#/performances": f"{mo.icon('lucide:award')} Top Performances",
                     "#/gameweeks": f"{mo.icon('lucide:hourglass')} Gameweek Results",
@@ -331,20 +330,33 @@ def _(entries_df, gameweek_range, history_df, mo, pl, px):
 def _(duckdb, mo):
     def player_points_leaderboard(entries_df):
         query = """
+        WITH manager_best_weeks AS (
+            SELECT 
+                h.entry_id,
+                e.player_first_name || ' ' || e.player_last_name as manager,
+                MAX(h.points) as best_points,
+                h.event as gameweek
+            FROM manager_history h
+            JOIN league_entries e ON h.entry_id = e.entry_id
+            WHERE h.points = (
+                SELECT MAX(h2.points) 
+                FROM manager_history h2 
+                WHERE h2.entry_id = h.entry_id
+            )
+            GROUP BY h.entry_id, manager, h.event, h.points
+        )
         SELECT 
-            e.player_first_name || ' ' || e.player_last_name as manager,
-            h.points,
-            h.event as gameweek
-        FROM manager_history h
-        JOIN league_entries e ON h.entry_id = e.entry_id
-        ORDER BY h.points DESC
-        LIMIT 10
+            manager,
+            best_points as points,
+            gameweek
+        FROM manager_best_weeks
+        ORDER BY best_points DESC
         """
 
         top_scores = duckdb.sql(query).df()
 
         return mo.vstack([
-            mo.md("## Top Gameweek Performances"), 
+            mo.md("## Best Gameweek Performance by Manager"), 
             mo.ui.table(top_scores)
         ])
     return (player_points_leaderboard,)
