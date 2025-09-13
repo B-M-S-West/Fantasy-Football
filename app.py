@@ -439,7 +439,7 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             ORDER BY successful_transfers DESC
             LIMIT 10
         """).df()
-    
+
         # Most transferred player attempts
         player_transfer_attempts = duckdb.sql("""
             SELECT 
@@ -453,29 +453,78 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             LIMIT 10
         """).df()
 
+        # Adjust to long/tidy format
+        legend_name_map = {
+            "successful_transfers": "Successful Transfers", 
+            "total_transfers": "Total Transfers", 
+            "transfer_attempts": "Transfer Attempts"
+        }
+
+        manager_long = transfer_stats.melt(
+            id_vars="manager",
+            value_vars=["successful_transfers", "total_transfers"],
+            var_name="Metric",
+            value_name="Count"
+        )
+        manager_long["Metric"] = manager_long["Metric"].map(legend_name_map)
+
+        most_long = player_transfer_most.melt(
+            id_vars="player_name",
+            value_vars=["successful_transfers", "transfer_attempts"],
+            var_name="Metric",
+            value_name="Count"
+        )
+        most_long["Metric"] = most_long["Metric"].map(legend_name_map)
+
+        attempts_long = player_transfer_attempts.melt(
+            id_vars="player_name",
+            value_vars=["successful_transfers", "transfer_attempts"],
+            var_name="Metric",
+            value_name="Count"
+        )
+        attempts_long["Metric"] = attempts_long["Metric"].map(legend_name_map)
+
         # Create visualizations
         fig1 = px.bar(
-            transfer_stats,
+            manager_long,
             x='manager',
-            y=['successful_transfers', 'total_transfers'],
+            y="Count",
+            color="Metric",
             title='Transfer Activity by Manager',
-            barmode="group"
+            barmode="group",
+            labels={
+                'manager': 'Managers',
+                "Count": "Number of Transfers", 
+                "Metric": "Transfer Metrics"
+            }
         )
 
         fig2 = px.bar(
-            player_transfer_most,
-            x='player_name',
-            y=['successful_transfers', 'transfer_attempts'],
-            title='Most Transferred Players', 
-            barmode="group"
+            most_long,
+            x="player_name",
+            y="Count",
+            color="Metric",
+            title="Most Transferred Players",
+            barmode="group",
+            labels={
+                "player_name": "Player Names",
+                "Count": "Number of Transfers",
+                "Metric": "Transfer Metrics"
+            }
         )
-    
+
         fig3 = px.bar(
-            player_transfer_attempts,
-            x='player_name',
-            y=['successful_transfers', 'transfer_attempts'],
-            title='Most Transferred Players by attempt', 
-            barmode="group"
+            attempts_long,
+            x="player_name",
+            y="Count",
+            color="Metric",
+            title="Most Transferred Players by Attempt",
+            barmode="group",
+            labels={
+                "player_name": "Player Names",
+                "Count": "Number of Transfers",
+                "Metric": "Transfer Metrics"
+            }
         )
 
         return mo.vstack([
@@ -491,7 +540,16 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             mo.ui.plotly(fig3), 
 
             mo.md("### Transfer Success Rates"), 
-            mo.ui.table(transfer_stats)
+            mo.ui.table(
+                transfer_stats.rename(
+                    columns={
+                        "manager": "Managers",
+                        "total_transfers": "Total Transfers",
+                        "successful_transfers": "Successful Transfers",
+                        "success_rate": "Success Rate (%)"
+                    }
+                )
+            )
         ])
     return (transfer_analysis_dashboard,)
 
