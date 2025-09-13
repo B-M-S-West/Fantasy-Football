@@ -427,8 +427,21 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             ORDER BY total_transfers DESC
         """).df()
 
-        # Most transferred players
-        player_transfers = duckdb.sql("""
+        # Most transferred player
+        player_transfer_most = duckdb.sql("""
+            SELECT 
+                el.web_name as player_name,
+                COUNT(*) as transfer_attempts,
+                SUM(CASE WHEN t.result = 'a' THEN 1 ELSE 0 END) as successful_transfers
+            FROM transfers t
+            JOIN elements el ON t.element_in = el.id
+            GROUP BY el.web_name
+            ORDER BY successful_transfers DESC
+            LIMIT 10
+        """).df()
+    
+        # Most transferred player attempts
+        player_transfer_attempts = duckdb.sql("""
             SELECT 
                 el.web_name as player_name,
                 COUNT(*) as transfer_attempts,
@@ -450,10 +463,18 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
         )
 
         fig2 = px.bar(
-            player_transfers,
+            player_transfer_most,
             x='player_name',
             y=['successful_transfers', 'transfer_attempts'],
             title='Most Transferred Players', 
+            barmode="group"
+        )
+    
+        fig3 = px.bar(
+            player_transfer_attempts,
+            x='player_name',
+            y=['successful_transfers', 'transfer_attempts'],
+            title='Most Transferred Players by attempt', 
             barmode="group"
         )
 
@@ -463,8 +484,11 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
             mo.md("### Manager Transfer Activity"), 
             mo.ui.plotly(fig1),
 
-            mo.md("### Most Sought-After Players"), 
+            mo.md("### Most Transferred Players"), 
             mo.ui.plotly(fig2), 
+
+            mo.md("### Most Sought-After Players"), 
+            mo.ui.plotly(fig3), 
 
             mo.md("### Transfer Success Rates"), 
             mo.ui.table(transfer_stats)
