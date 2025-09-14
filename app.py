@@ -212,6 +212,7 @@ def _():
     MANAGER_HISTORY_URL = 'https://draft.premierleague.com/api/entry/{}/history'
     return (
         ELEMENT_INFO_URL,
+        ENTRY_PICKS_URL,
         LEAGUE_DATA_URL,
         MANAGER_HISTORY_URL,
         TRANSFERS_URL,
@@ -734,7 +735,7 @@ def _(mo, pl):
 
 
 @app.cell
-def _(duckdb, fetch_data, mo, pl, px):
+def _(ENTRY_PICKS_URL, duckdb, fetch_data, mo, pl, px):
     def display_team_composition(team_selector, gameweek_selector, entries_df):
         if not team_selector.value:
             return mo.md("Please select a team to analyze")
@@ -745,7 +746,7 @@ def _(duckdb, fetch_data, mo, pl, px):
         ).select('entry_id').item()
 
         # Get team picks for selected gameweek
-        picks = fetch_data('ENTRY_PICKS_URL'.format(entry_id, gameweek_selector.value))
+        picks = fetch_data(ENTRY_PICKS_URL.format(entry_id, gameweek_selector.value))
         picks_df = pl.DataFrame(picks['picks'])
 
         # Join with element info
@@ -763,12 +764,12 @@ def _(duckdb, fetch_data, mo, pl, px):
             e.total_points,
             e.points_per_game::FLOAT as ppg,
             CASE WHEN p.position <= 11 THEN 'Starting' ELSE 'Bench' END as status
-        FROM picks p
+        FROM picks_df p
         JOIN elements e ON p.element = e.id
         ORDER BY p.position
         """
 
-        team_composition = duckdb.sql(query).df()
+        team_composition = duckdb.sql(query).pl()
 
         # Create formation visualization
         fig = px.scatter(
@@ -781,14 +782,19 @@ def _(duckdb, fetch_data, mo, pl, px):
             title=f'Team Composition - GW{gameweek_selector.value}'
         )
 
+        # Render Markdown output using Polars-native ASCII_MARKDOWN
+        with pl.Config() as cfg:
+            cfg.set_tbl_formatting("ASCII_MARKDOWN")
+            team_table_md = f"```\n{repr(team_composition)}\n```"
+        
         return mo.md(f"""
         ## Team Composition Analysis for {team_selector.value}
 
         ### Squad Overview
-        {fig}
+        {fig} # Need to adjust this like the others
 
         ### Squad Details
-        {team_composition.to_markdown()}
+        {team_table_md}
         """)
     return (display_team_composition,)
 
@@ -808,6 +814,7 @@ def _():
     import networkx as nx
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
+    from IPython.display import display, Markdown
     return (
         Dict,
         List,
@@ -821,6 +828,11 @@ def _():
         pl,
         px,
     )
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
