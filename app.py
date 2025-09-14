@@ -782,11 +782,13 @@ def _(ENTRY_PICKS_URL, duckdb, fetch_data, mo, pl, px):
             title=f'Team Composition - GW{gameweek_selector.value}'
         )
 
-        # Render Markdown output using Polars-native ASCII_MARKDOWN
-        with pl.Config() as cfg:
-            cfg.set_tbl_formatting("ASCII_MARKDOWN")
-            cfg.set_tbl_hide_column_data_types(True)  # This removes the dtype row
-            team_table_md = str(team_composition)
+        # Render interactive marimo table
+        team_table = mo.ui.table(
+            data=team_composition, 
+            pagination=True, 
+            selection="multi",
+            label="Squad Details"
+        )
 
         return mo.md(f"""
         ## Team Composition Analysis for {team_selector.value}
@@ -795,7 +797,7 @@ def _(ENTRY_PICKS_URL, duckdb, fetch_data, mo, pl, px):
         {mo.ui.plotly(fig)}
 
         ### Squad Details
-        {team_table_md}
+        {team_table}
         """)
     return (display_team_composition,)
 
