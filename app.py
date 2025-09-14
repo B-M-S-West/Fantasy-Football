@@ -785,7 +785,8 @@ def _(ENTRY_PICKS_URL, duckdb, fetch_data, mo, pl, px):
         # Render Markdown output using Polars-native ASCII_MARKDOWN
         with pl.Config() as cfg:
             cfg.set_tbl_formatting("ASCII_MARKDOWN")
-            team_table_md = f"```\n{repr(team_composition)}\n```"
+            cfg.set_tbl_hide_column_data_types(True)  # This removes the dtype row
+            team_table_md = str(team_composition)
 
         return mo.md(f"""
         ## Team Composition Analysis for {team_selector.value}
