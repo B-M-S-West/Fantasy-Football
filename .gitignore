@@ -5,6 +5,7 @@ fantasyfootball-draft.json
 .vscode
 __marimo__/
 .vscode/
+.venv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
