@@ -166,6 +166,7 @@ dependencies = [
     { name = "plotly", extra = ["express"] },
     { name = "polars" },
     { name = "pyarrow" },
+    { name = "pyodide-httpx" },
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "sqlglot" },
@@ -189,6 +190,7 @@ requires-dist = [
     { name = "plotly", extras = ["express"], specifier = ">=6.3.0" },
     { name = "polars", specifier = ">=1.33.0" },
     { name = "pyarrow", specifier = ">=21.0.0" },
+    { name = "pyodide-httpx", specifier = ">=0.2.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "sqlglot", specifier = ">=27.10.0" },
@@ -828,6 +830,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/55/b3/6d2b3f149bc5413b0a29761c2c5832d8ce904a1d7f621e86616d96f505cc/pymdown_extensions-10.16.1.tar.gz", hash = "sha256:aace82bcccba3efc03e25d584e6a22d27a8e17caa3f4dd9f207e49b787aa9a91", size = 853277, upload-time = "2025-07-28T16:19:34.167Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e4/06/43084e6cbd4b3bc0e80f6be743b2e79fbc6eed8de9ad8c629939fa55d972/pymdown_extensions-10.16.1-py3-none-any.whl", hash = "sha256:d6ba157a6c03146a7fb122b2b9a121300056384eafeec9c9f9e584adfdb2a32d", size = 266178, upload-time = "2025-07-28T16:19:31.401Z" },
+]
+
+[[package]]
+name = "pyodide-httpx"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cc/61/dac172a07e710f24f9027919448d418ec452884d62c3fec5469b877d4c1c/pyodide_httpx-0.2.0.tar.gz", hash = "sha256:d4c976cf2cf6ea1133f759a62cf0f01e89b3f8c29edb28734e3af0208241d001", size = 13022, upload-time = "2025-02-16T07:32:52.026Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/33/c338c68d41ce6a2b6aa57f265a998602b70f68a2b9f356632680a86c67ad/pyodide_httpx-0.2.0-py3-none-any.whl", hash = "sha256:03d8519549a95aef3ff6bff1e88df4d72e687c46113772806ae8793b100fb734", size = 14960, upload-time = "2025-02-16T07:32:50.206Z" },
 ]
 
 [[package]]

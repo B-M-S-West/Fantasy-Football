@@ -20,6 +20,7 @@ dependencies = [
     "plotly[express]>=6.3.0",
     "polars>=1.33.0",
     "pyarrow>=21.0.0",
+    "pyodide-httpx>=0.2.0",
     "python-dotenv>=1.0.1",
     "requests>=2.32.3",
     "sqlglot>=27.10.0",

@@ -221,6 +221,21 @@ def _():
 
 @app.cell
 def _(Dict, LEAGUE_DATA_URL, List, MANAGER_HISTORY_URL, httpx):
+    import sys
+
+    def patch_if_pyodide():
+        if "pyodide" in sys.modules:  # running in browser
+            import micropip
+            import asyncio
+
+            async def patch():
+                await micropip.install(["pyodide-httpx", "ssl"])
+                from pyodide_httpx import patch_httpx
+                patch_httpx()
+            asyncio.get_event_loop().run_until_complete(patch())
+
+    patch_if_pyodide()
+
     def fetch_data(url: str) -> Dict:
         response = httpx.get(url)
         return response.json()
