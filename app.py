@@ -364,7 +364,7 @@ def _(duckdb, mo):
 
         return mo.vstack([
             mo.md("## Best Gameweek Performance by Manager"), 
-            mo.ui.table(top_scores)
+            mo.ui.table(top_scores, pagination=False)
         ])
     return (player_points_leaderboard,)
 
@@ -386,7 +386,7 @@ def _(duckdb, mo):
 
         return mo.vstack([
             mo.md(f"## Gameweek {gameweek_selector.value} Results"), 
-            mo.ui.table(gw_results)
+            mo.ui.table(gw_results, pagination=False)
         ])
     return (gameweek_analysis,)
 
@@ -555,7 +555,8 @@ def _(duckdb, elements, league_entries, mo, px, transfers):
                         "successful_transfers": "Successful Transfers",
                         "success_rate": "Success Rate (%)"
                     }
-                )
+                ),
+                pagination=False
             )
         ])
     return (transfer_analysis_dashboard,)
