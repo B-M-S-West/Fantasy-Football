@@ -166,7 +166,7 @@ dependencies = [
     { name = "plotly", extra = ["express"] },
     { name = "polars" },
     { name = "pyarrow" },
-    { name = "pyodide-httpx" },
+    { name = "pyodide-http" },
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "sqlglot" },
@@ -190,7 +190,7 @@ requires-dist = [
     { name = "plotly", extras = ["express"], specifier = ">=6.3.0" },
     { name = "polars", specifier = ">=1.33.0" },
     { name = "pyarrow", specifier = ">=21.0.0" },
-    { name = "pyodide-httpx", specifier = ">=0.2.0" },
+    { name = "pyodide-http", specifier = ">=0.2.2" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "sqlglot", specifier = ">=27.10.0" },
@@ -833,15 +833,12 @@ wheels = [
 ]
 
 [[package]]
-name = "pyodide-httpx"
-version = "0.2.0"
+name = "pyodide-http"
+version = "0.2.2"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/61/dac172a07e710f24f9027919448d418ec452884d62c3fec5469b877d4c1c/pyodide_httpx-0.2.0.tar.gz", hash = "sha256:d4c976cf2cf6ea1133f759a62cf0f01e89b3f8c29edb28734e3af0208241d001", size = 13022, upload-time = "2025-02-16T07:32:52.026Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/69/122182a6ee6b3b55256de91b91b0a03965997be3e4936929b7bfdec0c99e/pyodide_http-0.2.2.tar.gz", hash = "sha256:d98132c664a621c950d4d795fa013b763b0ebc223f6107d06483b736802b61c0", size = 9658, upload-time = "2025-02-05T14:21:29.492Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/33/c338c68d41ce6a2b6aa57f265a998602b70f68a2b9f356632680a86c67ad/pyodide_httpx-0.2.0-py3-none-any.whl", hash = "sha256:03d8519549a95aef3ff6bff1e88df4d72e687c46113772806ae8793b100fb734", size = 14960, upload-time = "2025-02-16T07:32:50.206Z" },
+    { url = "https://files.pythonhosted.org/packages/43/aa/471c9cb07acd2de48acf70aef07139f08f2f7ea6f85883f19a7296243ffb/pyodide_http-0.2.2-py3-none-any.whl", hash = "sha256:cf006ea593c1643b5badeb4d42ed24a6eebd830276171fa1f82de0777b3fb608", size = 9796, upload-time = "2025-02-05T14:21:28.15Z" },
 ]
 
 [[package]]
