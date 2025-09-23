@@ -4,7 +4,7 @@ __generated_with = "0.15.2"
 app = marimo.App(width="medium")
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md(
         r"""
@@ -14,6 +14,12 @@ def _(mo):
     Use the sidebar to navigate between the different analysis pages
     """
     )
+    return
+
+
+@app.cell
+def _(league_id_input):
+    league_id_input
     return
 
 
@@ -217,19 +223,6 @@ def _():
         MANAGER_HISTORY_URL,
         TRANSFERS_URL,
     )
-
-
-@app.cell
-async def _():
-    import sys
-
-    if "pyodide" in sys.modules:
-        import micropip
-        await micropip.install("pyodide-http")
-
-        import pyodide_http
-        pyodide_http.patch_all()
-    return
 
 
 @app.cell
