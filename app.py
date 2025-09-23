@@ -225,14 +225,14 @@ def _(Dict, LEAGUE_DATA_URL, List, MANAGER_HISTORY_URL, httpx):
 
     def patch_if_pyodide():
         if "pyodide" in sys.modules:  # running in browser
+            from pyodide.ffi import run_sync
             import micropip
-            import asyncio
+            from pyodide_httpx import patch_httpx
 
             async def patch():
                 await micropip.install(["pyodide-httpx", "ssl"])
-                from pyodide_httpx import patch_httpx
                 patch_httpx()
-            asyncio.get_event_loop().run_until_complete(patch())
+            run_sync(patch())
 
     patch_if_pyodide()
 
