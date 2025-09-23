@@ -47,6 +47,16 @@ marimo run app.py
 
 4. Navigate through different analysis pages using the sidebar menu
 
+## Deploying the Application as a github page
+1. Export the marimo notebook to html-wasm
+```bash
+ uvx marimo export html-wasm app.py -o docs
+```
+2. Go to the settings page on github for your repository
+3. Select the pages tab in. github.
+4. Choose the source for 'Build and deployment' to be deploy from branch and set the branch to be main and docs
+5. Go into the repository about settings on the code and set 'Use your GitHub Pages website' to checked to then deploy
+
 ## 🎯 Usage
 
 ### Getting Your League ID
